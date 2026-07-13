@@ -28,21 +28,27 @@ AI 应用开发不只是写 Prompt，也不只是做 Demo。
 
 ## Roadmap
 
-- [ ] Agent Core
-- [ ] Knowledge / RAG
-- [ ] Evaluation
-- [ ] Production Engineering
-- [ ] Interview Assets
+- [x] Phase 0：DirectBus Business Baseline
+- [ ] Sprint 1：Agent Core
+- [ ] Sprint 2：MCP Practice
+- [ ] Sprint 3：Knowledge / RAG
+- [ ] Sprint 4：Knowledge Governance
+- [ ] Sprint 5：Evaluation
+- [ ] Sprint 6：Production Engineering
+- [ ] Sprint 7：Interview Loop
 
 ## 当前进度
 
-🚧 Sprint 1：Business Understanding / 业务理解
+✅ Phase 0：DirectBus Business Baseline / 业务基线已完成
 
-当前重点：
+⏸️ Sprint 1：Agent Core / Skill & Tool Design 已初始化、尚未开始
 
-- 梳理 DirectBus 业务流程
-- 拆解适合 Agent 的业务场景
-- 建立 Tool / Skill / Knowledge / Evaluation 映射
+Sprint 1 启动后重点：
+
+- 设计 Intent 到 Skill 的路由关系
+- 明确 Skill 与 Tool 的边界
+- 优先设计 Pipeline Status Summary、Build Failure Analysis、Merge Block Diagnose 三个核心 Skill
+- 建立缺参追问、工具失败兜底、结构化输出和人机确认的最小设计闭环
 
 ## Core Principles
 
