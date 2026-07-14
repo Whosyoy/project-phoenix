@@ -1,5 +1,9 @@
 # Sprint 1：Agent Core / Skill & Tool Design
 
+## Status
+
+In Progress
+
 ## Goal
 
 完成 DirectBus Agent Core 的最小设计闭环，把 Phase 0 已确认的顶层 Intent、业务证据和 Agent 边界进一步收敛为可执行的 Skill 设计骨架。

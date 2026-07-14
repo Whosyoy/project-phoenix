@@ -19,17 +19,30 @@
 
 ## Skill 1：Pipeline Status Summary Skill
 
-- [ ] 明确业务目标
-- [ ] 明确触发意图
-- [ ] 明确输入参数
-- [ ] 明确缺失参数处理
-- [ ] 明确执行步骤
-- [ ] 明确 Tool 候选
-- [ ] 明确 Knowledge 需求
-- [ ] 明确输出结构
-- [ ] 明确异常与兜底
-- [ ] 明确风险边界
-- [ ] 明确后续 Evaluation 方向
+- [x] 第一版设计完成
+- [x] 明确业务目标
+- [x] 明确触发意图
+- [x] 明确输入参数
+- [x] 明确缺失参数处理
+- [x] 明确执行步骤
+- [x] 明确 Tool 候选
+- [x] 明确 Knowledge 需求
+- [x] 明确输出结构
+- [x] 明确异常与兜底
+- [x] 明确风险边界
+- [x] 明确后续 Evaluation 方向
+
+## 已固化的决策与治理机制
+
+- [x] `ADR-001`：状态汇总类场景采用确定性 Workflow
+- [x] `LEARNING-GOVERNANCE.md`：Project Phoenix 学习与迭代治理机制
+
+## Design Hypotheses
+
+以下判断尚未经过代码或实验验证，不作为已确认规则：
+
+- [ ] `DH-001`：`query_build_detail` 与 `query_test_detail` 是否可并行调用
+- [ ] `DH-002`：状态枚举、`isHistory` 过滤等内容应归为确定性规则，而非 RAG Knowledge
 
 ## Skill 2：Build Failure Analysis Skill
 
@@ -68,3 +81,7 @@
 - [ ] 检查风险边界和人机确认是否保持一致
 - [ ] 创建 Sprint 1 `REVIEW.md`
 - [ ] 创建 Sprint 1 `NEXT.md`
+
+## 下一步唯一优先事项
+
+完成 Build Failure Analysis Skill 的最小可实现设计。
