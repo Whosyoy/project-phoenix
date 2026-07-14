@@ -4,12 +4,12 @@
 
 - [ ] 确认 Sprint 1 只使用 Phase 0 已完成的业务基线
 - [ ] 确认未知内部规则继续保留 TODO
-- [ ] 确认本阶段不写代码、不写 MCP schema
-- [ ] 确认本阶段不展开完整 RAG、Evaluation 或生产工程化实现
+- [x] 确认 MVP 只做最小实现，不写完整 MCP schema
+- [x] 确认本阶段不展开完整 RAG、Evaluation 或生产工程化实现
 
 ## Agent Core Minimum Design Loop
 
-- [ ] 建立与 3 个优先 Skill 相关的顶层 Intent 路由关系，其余 Intent 暂不展开
+- [ ] 建立与 2 个 MVP Skill 相关的顶层 Intent 路由关系，其余 Intent 暂不展开
 - [ ] 明确 Skill 与 Tool 的职责边界
 - [ ] 说明固定 Workflow 与动态 Agent 的取舍
 - [ ] 统一缺失参数识别与追问方式
@@ -43,22 +43,21 @@
 
 - [ ] `DH-001`：`query_build_detail` 与 `query_test_detail` 是否可并行调用
 - [ ] `DH-002`：状态枚举、`isHistory` 过滤等内容应归为确定性规则，而非 RAG Knowledge
+- [ ] `DH-003`：`query_build_failure_analysis` 是否需要支持多个失败对象批量查询
+- [ ] `DH-004`：`errorSummary` 与 `aiAnalysisResult` 的证据等级和冲突处理规则
+- [ ] `DH-005`：已有分析结果不存在时，MVP 的降级路径
 
 ## Skill 2：Build Failure Analysis Skill
 
-- [ ] 明确业务目标
-- [ ] 明确触发意图
-- [ ] 明确输入参数
-- [ ] 明确缺失参数处理
-- [ ] 明确执行步骤
-- [ ] 明确 Tool 候选
-- [ ] 明确 Knowledge 需求
-- [ ] 明确输出结构
-- [ ] 明确异常与兜底
-- [ ] 明确风险边界
-- [ ] 明确后续 Evaluation 方向
+- [x] Build Failure Analysis Skill 最小可实现设计
+- [x] 默认 Tool 范围确认
+- [x] `query_build_failure_analysis` 语义确认
+- [x] 证据不足输出“不确定”
+- [x] MVP Out of Scope 确认
 
 ## Skill 3：Merge Block Diagnose Skill
+
+状态：暂缓，不属于当前 Agent Core MVP。
 
 - [ ] 明确业务目标
 - [ ] 明确触发意图
@@ -84,4 +83,22 @@
 
 ## 下一步唯一优先事项
 
-完成 Build Failure Analysis Skill 的最小可实现设计。
+完成 Agent Core MVP 的技术设计与最小实现。
+
+### MVP 仅包含
+
+- `PIPELINE_STATUS_QUERY`
+- `BUILD_FAILURE_DIAGNOSE`
+- Pipeline Status Summary Skill
+- Build Failure Analysis Skill
+- 模拟 Tool
+- 结构化证据
+- 自然语言解释
+
+### 暂不实现
+
+- 第三个 Skill
+- 完整 MCP
+- RAG
+- Evaluation
+- 生产工程化
