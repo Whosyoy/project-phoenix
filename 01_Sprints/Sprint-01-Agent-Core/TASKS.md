@@ -37,6 +37,18 @@
 - [x] `ADR-001`：状态汇总类场景采用确定性 Workflow
 - [x] `LEARNING-GOVERNANCE.md`：Project Phoenix 学习与迭代治理机制
 
+## MVP-1.1 学习理解验收
+
+- [x] 理解 Intent 决定参数提取契约
+- [x] 理解 UNKNOWN 必须在 SkillRegistry 前拦截
+- [ ] 准确理解 Skill 与 Workflow 的层级关系
+- [x] 基本理解 ToolResult 与 EvidenceBundle 区别
+- [ ] 准确理解 PARTIAL 与 UNCERTAIN
+- [ ] 理解 Workflow 决定事实、ResponseGenerator 负责表达
+- [ ] 理解 SkillExecutor 当前价值与未来治理职责
+
+本轮验收记录见：`learning-review-mvp-1.1.md`。
+
 ## Design Hypotheses
 
 以下判断尚未经过代码或实验验证，不作为已确认规则：
@@ -46,6 +58,8 @@
 - [ ] `DH-003`：`query_build_failure_analysis` 是否需要支持多个失败对象批量查询
 - [ ] `DH-004`：`errorSummary` 与 `aiAnalysisResult` 的证据等级和冲突处理规则
 - [ ] `DH-005`：已有分析结果不存在时，MVP 的降级路径
+- [ ] `DH-009`：验证不同 Skill 是否应具有专属证据模型、业务不变量、冲突规则和降级策略；完成两个 Skill 后再评估公共 Evidence Rule 接口
+- [ ] `DH-010`：对比 Retry Skill 的高阶 Tool 封装模式与“Skill 预检查 + 用户确认 + Tool 最终强校验”模式；最终安全规则必须保留在 Tool / 后端
 
 ## Skill 2：Build Failure Analysis Skill
 
@@ -83,22 +97,21 @@
 
 ## 下一步唯一优先事项
 
-完成 Agent Core MVP 的技术设计与最小实现。
+Rory 结合代码重新走一遍以下链路：
 
-### MVP 仅包含
+```text
+ToolResult
+→ Workflow 业务处理
+→ EvidenceBundle
+→ SkillResult
+→ ResponseGenerator
+```
 
-- `PIPELINE_STATUS_QUERY`
-- `BUILD_FAILURE_DIAGNOSE`
-- Pipeline Status Summary Skill
-- Build Failure Analysis Skill
-- 模拟 Tool
-- 结构化证据
-- 自然语言解释
+### 暂时不要
 
-### 暂不实现
-
-- 第三个 Skill
-- 完整 MCP
-- RAG
-- Evaluation
-- 生产工程化
+- 不开始 Build Failure Analysis Skill
+- 不接 LLM
+- 不接 Spring AI
+- 不接 MCP
+- 不新增复杂抽象
+- 不继续扩大代码范围

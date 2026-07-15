@@ -14,18 +14,43 @@ import com.projectphoenix.agentcore.tool.payload.TestDetailData;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 流水线状态汇总的确定性 Workflow。
+ *
+ * <p>该 Workflow 固定调用全局状态、构建明细和测试明细 Tool，过滤历史记录，
+ * 聚合结构化证据并识别全局状态与当前明细之间的冲突。</p>
+ *
+ * @author Rory
+ * @since 2026-07-15
+ */
 public final class PipelineStatusSummaryWorkflow {
     private static final String SKILL_NAME = "PipelineStatusSummarySkill";
     private final DirectBusStatusTool statusTool;
     private final BuildDetailTool buildTool;
     private final TestDetailTool testTool;
 
-    public PipelineStatusSummaryWorkflow(DirectBusStatusTool statusTool, BuildDetailTool buildTool, TestDetailTool testTool) {
+    /**
+     * 创建确定性状态汇总 Workflow。
+     *
+     * @param statusTool 全局状态查询 Tool
+     * @param buildTool 构建明细查询 Tool
+     * @param testTool 测试明细查询 Tool
+     */
+    public PipelineStatusSummaryWorkflow(
+            DirectBusStatusTool statusTool,
+            BuildDetailTool buildTool,
+            TestDetailTool testTool) {
         this.statusTool = statusTool;
         this.buildTool = buildTool;
         this.testTool = testTool;
     }
 
+    /**
+     * 执行固定 Tool 调用、当前记录过滤、冲突检查和证据聚合。
+     *
+     * @param context 已完成参数校验的执行上下文
+     * @return 带完整证据链的 Skill 结果
+     */
     public SkillResult execute(ExecutionContext context) {
         String id = context.applyBusId();
         ToolResult<DirectBusStatusData> status = statusTool.query(id);
@@ -46,30 +71,59 @@ public final class PipelineStatusSummaryWorkflow {
             add(evidence, "stageStatus", stageName(status.data().stageStatus()), status.toolName(), "buildStageStatus");
             add(evidence, "nodeStatus", status.data().nodeStatus(), status.toolName(), "buildNodeStatus");
         }
-        currentBuilds(builds).forEach(item -> add(evidence, "buildStatus",
-                item.projectName() + "/" + item.baselineName() + "=" + item.status(), builds.toolName(), "buildStatus"));
-        currentTests(tests).forEach(item -> add(evidence, "testStatus",
-                item.projectName() + "/" + item.baselineName() + "=" + item.status(), tests.toolName(), "testStatus"));
+        currentBuilds(builds).forEach(item -> add(
+                evidence,
+                "buildStatus",
+                item.projectName() + "/" + item.baselineName() + "=" + item.status(),
+                builds.toolName(),
+                "buildStatus"));
+        currentTests(tests).forEach(item -> add(
+                evidence,
+                "testStatus",
+                item.projectName() + "/" + item.baselineName() + "=" + item.status(),
+                tests.toolName(),
+                "testStatus"));
 
         if (status.data() != null && !status.data().running() && hasActiveDetail(builds, tests)) {
             conflicts.add("全局流程已结束，但当前明细仍存在 RUNNING 状态");
         }
 
         boolean uncertain = !conflicts.isEmpty();
-        EvidenceBundle bundle = new EvidenceBundle(context.request().requestId(), context.intent(), SKILL_NAME, id,
-                evidence, executions, missing, conflicts, uncertain);
+        EvidenceBundle bundle = new EvidenceBundle(
+                context.request().requestId(),
+                context.intent(),
+                SKILL_NAME,
+                id,
+                evidence,
+                executions,
+                missing,
+                conflicts,
+                uncertain);
         SkillResult.Status resultStatus = uncertain ? SkillResult.Status.UNCERTAIN
                 : missing.isEmpty() ? SkillResult.Status.SUCCESS : SkillResult.Status.PARTIAL;
         return new SkillResult(resultStatus, bundle, List.of());
     }
 
-    private static void add(List<EvidenceBundle.EvidenceItem> target, String name, String value, String tool, String field) {
+    private static void add(
+            List<EvidenceBundle.EvidenceItem> target,
+            String name,
+            String value,
+            String tool,
+            String field) {
         target.add(new EvidenceBundle.EvidenceItem(name, value, tool, field));
     }
 
-    private static void recordExecution(ToolResult<?> result, List<EvidenceBundle.ToolExecution> executions, List<String> missing) {
-        executions.add(new EvidenceBundle.ToolExecution(result.toolName(), result.status().name(), result.errorMessage()));
-        if (result.status() != ToolResult.Status.SUCCESS) missing.add(result.toolName() + ": " + result.errorMessage());
+    private static void recordExecution(
+            ToolResult<?> result,
+            List<EvidenceBundle.ToolExecution> executions,
+            List<String> missing) {
+        executions.add(new EvidenceBundle.ToolExecution(
+                result.toolName(),
+                result.status().name(),
+                result.errorMessage()));
+        if (result.status() != ToolResult.Status.SUCCESS) {
+            missing.add(result.toolName() + ": " + result.errorMessage());
+        }
     }
 
     private static List<BuildDetailData> currentBuilds(ToolResult<List<BuildDetailData>> result) {
@@ -80,7 +134,9 @@ public final class PipelineStatusSummaryWorkflow {
         return result.data() == null ? List.of() : result.data().stream().filter(item -> !item.history()).toList();
     }
 
-    private static boolean hasActiveDetail(ToolResult<List<BuildDetailData>> builds, ToolResult<List<TestDetailData>> tests) {
+    private static boolean hasActiveDetail(
+            ToolResult<List<BuildDetailData>> builds,
+            ToolResult<List<TestDetailData>> tests) {
         return currentBuilds(builds).stream().anyMatch(item -> "RUNNING".equals(item.status()))
                 || currentTests(tests).stream().anyMatch(item -> "RUNNING".equals(item.status()));
     }

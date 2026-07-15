@@ -4,6 +4,12 @@ import com.projectphoenix.agentcore.tool.DirectBusStatusTool;
 import com.projectphoenix.agentcore.tool.ToolResult;
 import com.projectphoenix.agentcore.tool.payload.DirectBusStatusData;
 
+/**
+ * 使用固定 Fixture 模拟 DirectBus 全局状态查询。
+ *
+ * @author Rory
+ * @since 2026-07-15
+ */
 public final class MockDirectBusStatusTool implements DirectBusStatusTool {
     @Override
     public ToolResult<DirectBusStatusData> query(String id) {

@@ -8,6 +8,14 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * 使用显式格式和已确认上下文提取 {@code apply_bus_id}。
+ *
+ * <p>用户文本中的显式值优先于会话上下文；无法确认时保留缺参状态。</p>
+ *
+ * @author Rory
+ * @since 2026-07-15
+ */
 public final class RuleBasedParameterExtractor implements ParameterExtractor {
     private static final Pattern EXPLICIT_ID = Pattern.compile(
             "(?i)apply[_ -]?bus[_ -]?id\\s*[:=]?\\s*([a-z0-9-]+)");
@@ -24,7 +32,9 @@ public final class RuleBasedParameterExtractor implements ParameterExtractor {
     }
 
     private String explicitId(String text) {
-        if (text == null) return null;
+        if (text == null) {
+            return null;
+        }
         Matcher matcher = EXPLICIT_ID.matcher(text);
         return matcher.find() ? matcher.group(1) : null;
     }
