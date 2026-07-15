@@ -416,19 +416,11 @@ com.projectphoenix.agentcore
 | DH-006 | 规则优先 Router 能否稳定覆盖两个 Intent | 使用 UQ-005～UQ-012 和歧义问题验证 |
 | DH-007 | 确定性 ParameterExtractor 能否覆盖 MVP 必需参数 | 验证显式 ID、上下文 ID、缺失和多候选场景 |
 | DH-008 | EvidenceBundle 字段能否支持回答可追溯和不确定说明 | 从最终回答反查每个事实来源 |
-| DH-009 | 不同 Skill 应具有各自的证据类型、业务不变量、冲突规则和降级策略 | 至少完成状态汇总和构建失败分析两个 Skill 后，再评估公共 Evidence Rule 接口 |
+| DH-009 | 模板式 ResponseGenerator 是否足以跑通首个学习闭环 | 比较模板输出与受限模型输出的可理解性 |
 | DH-010 | 有副作用的 Retry Skill 应如何划分 Skill 预检查与高阶 MCP Tool / 后端强校验 | 对比高阶 Tool 封装模式与 Skill 预检查模式，验证安全边界和用户确认位置 |
-| DH-011 | 模板式 ResponseGenerator 是否足以跑通首个学习闭环 | 比较模板输出与受限模型输出的可理解性 |
+| DH-011 | 不同 Skill 应具有各自的证据类型、业务不变量、冲突规则和降级策略 | 至少完成状态汇总和构建失败分析两个 Skill 后，再评估公共 Evidence Rule 接口 |
 
-### 17.1 DH-009：Skill 专属证据规则与公共执行治理边界
-
-不同 Skill 具有不同的证据类型、业务不变量、冲突规则、降级策略、前置条件和确认规则。
-
-公共执行层只处理 Tool 调用、超时、异常、Trace 和审计等技术治理。具体证据完整性、冲突判断和业务结果状态，应由各 Skill 的 Workflow 或 Skill 专属 Evidence Policy 负责。
-
-至少完成 Pipeline Status Summary 与 Build Failure Analysis 两个 Skill 后，再根据实际重复模式判断是否需要抽象公共 Evidence Rule 接口。当前不引入通用规则引擎或统一业务规则接口。
-
-### 17.2 DH-010：Retry Skill 的高阶 Tool 封装与安全边界
+### 17.1 DH-010：Retry Skill 的高阶 Tool 封装与安全边界
 
 公司内部 Retry Skill 当前采用高阶 MCP Tool 封装模式。
 
@@ -463,6 +455,14 @@ MCP Tool / 后端负责：
 - 两种模式对重复调用、状态变化和并发操作的处理差异。
 
 无论采用哪种模式，有副作用操作的最终业务安全规则都必须保留在 Tool / 后端，不能只依赖模型或 Skill 层判断。Skill 侧预检查只能用于体验优化和提前反馈，不能替代服务端最终强校验。
+
+### 17.2 DH-011：Skill 专属证据规则与公共执行治理边界
+
+不同 Skill 具有不同的证据类型、业务不变量、冲突规则、降级策略、前置条件和确认规则。
+
+公共执行层只处理 Tool 调用、超时、异常、Trace 和审计等技术治理。具体证据完整性、冲突判断和业务结果状态，应由各 Skill 的 Workflow 或 Skill 专属 Evidence Policy 负责。
+
+至少完成 Pipeline Status Summary 与 Build Failure Analysis 两个 Skill 后，再根据实际重复模式判断是否需要抽象公共 Evidence Rule 接口。当前不引入通用规则引擎或统一业务规则接口。
 
 ## 18. Review Gate
 

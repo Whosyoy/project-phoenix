@@ -58,8 +58,9 @@
 - [ ] `DH-003`：`query_build_failure_analysis` 是否需要支持多个失败对象批量查询
 - [ ] `DH-004`：`errorSummary` 与 `aiAnalysisResult` 的证据等级和冲突处理规则
 - [ ] `DH-005`：已有分析结果不存在时，MVP 的降级路径
-- [ ] `DH-009`：验证不同 Skill 是否应具有专属证据模型、业务不变量、冲突规则和降级策略；完成两个 Skill 后再评估公共 Evidence Rule 接口
+- [ ] `DH-009`：模板式 ResponseGenerator 是否足以跑通首个学习闭环
 - [ ] `DH-010`：对比 Retry Skill 的高阶 Tool 封装模式与“Skill 预检查 + 用户确认 + Tool 最终强校验”模式；最终安全规则必须保留在 Tool / 后端
+- [ ] `DH-011`：验证不同 Skill 是否应具有专属证据模型、业务不变量、冲突规则和降级策略；完成两个 Skill 后再评估公共 Evidence Rule 接口
 
 ## Skill 2：Build Failure Analysis Skill
 
