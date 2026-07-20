@@ -88,8 +88,15 @@ public final class PipelineStatusSummaryWorkflow {
             conflicts.add("全局流程已结束，但当前明细仍存在 RUNNING 状态");
         }
 
-        boolean criticalEvidenceMissing = isEvidenceMissing(status);
-        boolean supplementaryEvidenceMissing = isEvidenceMissing(builds) || isEvidenceMissing(tests);
+        boolean statusMissing = isEvidenceMissing(status);
+        boolean buildMissing = isEvidenceMissing(builds);
+        boolean testMissing = isEvidenceMissing(tests);
+
+        boolean isBuildStage = !statusMissing && status.data().stageStatus() == 2;
+        boolean criticalEvidenceMissing =
+                statusMissing || (isBuildStage && buildMissing);
+        boolean supplementaryEvidenceMissing =
+                (!isBuildStage && buildMissing) || testMissing;
         boolean uncertain = !conflicts.isEmpty() || criticalEvidenceMissing;
         EvidenceBundle bundle = new EvidenceBundle(
                 context.request().requestId(),

@@ -419,6 +419,7 @@ com.projectphoenix.agentcore
 | DH-009 | 模板式 ResponseGenerator 是否足以跑通首个学习闭环 | 比较模板输出与受限模型输出的可理解性 |
 | DH-010 | 有副作用的 Retry Skill 应如何划分 Skill 预检查与高阶 MCP Tool / 后端强校验 | 对比高阶 Tool 封装模式与 Skill 预检查模式，验证安全边界和用户确认位置 |
 | DH-011 | 不同 Skill 应具有各自的证据类型、业务不变量、冲突规则和降级策略 | 至少完成状态汇总和构建失败分析两个 Skill 后，再评估公共 Evidence Rule 接口 |
+| DH-012 | Pipeline Status Summary 中 Build / Test 明细的证据等级可能不是固定的 | 对比不同全局阶段、用户询问范围和当前业务节点下的证据必要性 |
 
 ### 17.1 DH-010：Retry Skill 的高阶 Tool 封装与安全边界
 
@@ -463,6 +464,18 @@ MCP Tool / 后端负责：
 公共执行层只处理 Tool 调用、超时、异常、Trace 和审计等技术治理。具体证据完整性、冲突判断和业务结果状态，应由各 Skill 的 Workflow 或 Skill 专属 Evidence Policy 负责。
 
 至少完成 Pipeline Status Summary 与 Build Failure Analysis 两个 Skill 后，再根据实际重复模式判断是否需要抽象公共 Evidence Rule 接口。当前不引入通用规则引擎或统一业务规则接口。
+
+### 17.3 DH-012：Pipeline Status Summary 的动态证据等级
+
+在 Pipeline Status Summary Skill 中，Build / Test 明细的证据等级可能不是固定的，其重要性可能取决于：
+
+- 当前全局阶段。
+- 用户具体询问范围。
+- 当前正在执行的业务节点。
+
+例如，当当前阶段为 `BUILD` 时，`query_build_detail` 可能属于关键证据，`query_test_detail` 可能是非必要证据。
+
+当前只实现并验证一个最小动态规则：当全局阶段为 `BUILD` 时，Build 明细属于关键证据，缺失时返回 `UNCERTAIN`。用户询问范围、其他全局阶段和当前业务节点对证据等级的影响仍未验证，因此 `DH-012` 保持未完全验证状态。
 
 ## 18. Review Gate
 

@@ -2,6 +2,7 @@ package com.projectphoenix.agentcore;
 
 import com.projectphoenix.agentcore.execution.SkillExecutor;
 import com.projectphoenix.agentcore.extractor.RuleBasedParameterExtractor;
+import com.projectphoenix.agentcore.model.ExecutionContext;
 import com.projectphoenix.agentcore.model.Intent;
 import com.projectphoenix.agentcore.model.SkillResult;
 import com.projectphoenix.agentcore.model.UserRequest;
@@ -9,15 +10,19 @@ import com.projectphoenix.agentcore.response.TemplateResponseGenerator;
 import com.projectphoenix.agentcore.router.RuleBasedIntentRouter;
 import com.projectphoenix.agentcore.skill.PipelineStatusSummarySkill;
 import com.projectphoenix.agentcore.skill.SkillRegistry;
+import com.projectphoenix.agentcore.tool.ToolResult;
 import com.projectphoenix.agentcore.tool.mock.MockBuildDetailTool;
 import com.projectphoenix.agentcore.tool.mock.MockDirectBusStatusTool;
 import com.projectphoenix.agentcore.tool.mock.MockTestDetailTool;
+import com.projectphoenix.agentcore.tool.payload.DirectBusStatusData;
+import com.projectphoenix.agentcore.tool.payload.TestDetailData;
 import com.projectphoenix.agentcore.workflow.PipelineStatusSummaryWorkflow;
 
+import java.util.List;
 import java.util.Map;
 
 /**
- * 覆盖 Pipeline Status Summary MVP-1.1 六个最小验收场景。
+ * 覆盖 Pipeline Status Summary MVP-1.1 七个最小验收场景。
  *
  * <p>测试使用 JDK 断言机制，不依赖第三方测试框架。</p>
  *
@@ -46,7 +51,8 @@ public final class AgentCoreMvpTest {
         testCriticalToolFailure();
         testPartialToolFailure();
         testGlobalDetailConflict();
-        System.out.println("PASS: " + passed + "/6 tests");
+        testBuildStageMissingBuildDetailIsUncertain();
+        System.out.println("PASS: " + passed + "/7 tests");
     }
 
     /**
@@ -115,6 +121,68 @@ public final class AgentCoreMvpTest {
         AgentCore.AgentResponse response = core().handle(request("查询状态 apply_bus_id=BUS-CONFLICT"));
         check(response.result().status() == SkillResult.Status.UNCERTAIN, "conflict status");
         check(response.answer().contains("不确定"), "conflict response");
+        passed++;
+    }
+
+    /**
+     * 验证 BUILD 阶段缺少构建明细时，独立 Tool 继续执行并保留证据，但最终结论不确定。
+     */
+    private void testBuildStageMissingBuildDetailIsUncertain() {
+        String id = "BUS-BUILD-STAGE-BUILD-MISSING";
+
+        PipelineStatusSummaryWorkflow workflow =
+                new PipelineStatusSummaryWorkflow(
+                        ignored -> ToolResult.success(
+                                "query_directbus_status",
+                                new DirectBusStatusData(id, true, 2, "BUILDING")),
+                        ignored -> ToolResult.failure(
+                                "query_build_detail",
+                                "fixture: build detail unavailable"),
+                        ignored -> ToolResult.success(
+                                "query_test_detail",
+                                List.of(new TestDetailData(
+                                        "phoenix-api",
+                                        "main",
+                                        "PENDING",
+                                        false))));
+
+        ExecutionContext context = new ExecutionContext(
+                request("查询状态 apply_bus_id=" + id),
+                Intent.PIPELINE_STATUS_QUERY,
+                id,
+                List.of());
+
+        SkillResult result = workflow.execute(context);
+
+        check(result.evidence().missingEvidence().stream()
+                        .anyMatch(item -> item.startsWith("query_build_detail:")),
+                "build missing evidence recorded");
+
+        check(result.evidence().toolExecutions().stream()
+                        .anyMatch(item -> "query_build_detail".equals(item.toolName())
+                                && "FAILURE".equals(item.status())),
+                "build failure recorded");
+
+        check(result.evidence().toolExecutions().stream()
+                        .anyMatch(item -> "query_test_detail".equals(item.toolName())
+                                && "SUCCESS".equals(item.status())),
+                "independent test tool continues");
+
+        check(result.evidence().evidenceItems().stream()
+                        .anyMatch(item -> "stageStatus".equals(item.factName())
+                                && "BUILD".equals(item.factValue())),
+                "BUILD stage evidence retained");
+
+        check(result.evidence().evidenceItems().stream()
+                        .anyMatch(item -> "testStatus".equals(item.factName())),
+                "available test evidence retained");
+
+        check(result.status() == SkillResult.Status.UNCERTAIN,
+                "BUILD stage requires build detail");
+
+        check(result.evidence().uncertain(),
+                "evidence bundle should be uncertain");
+
         passed++;
     }
 

@@ -43,11 +43,30 @@
 - [x] 理解 UNKNOWN 必须在 SkillRegistry 前拦截
 - [ ] 准确理解 Skill 与 Workflow 的层级关系
 - [x] 基本理解 ToolResult 与 EvidenceBundle 区别
-- [ ] 准确理解 PARTIAL 与 UNCERTAIN
+- [x] 准确理解 PARTIAL 与 UNCERTAIN
 - [ ] 理解 Workflow 决定事实、ResponseGenerator 负责表达
 - [ ] 理解 SkillExecutor 当前价值与未来治理职责
 
 本轮验收记录见：`learning-review-mvp-1.1.md`。
+
+## MVP-1.1 关键证据实验与验收
+
+- [x] 关键 Tool 失败实验
+- [x] 补充 Tool 失败实验
+- [x] Tool 失败后继续收集无依赖证据
+- [x] 关键证据缺失返回 `UNCERTAIN`
+- [x] 补充证据缺失返回 `PARTIAL`
+- [x] Tool `SUCCESS` 但 `data = null` 视为证据缺失
+- [x] MVP-1.1 关键证据理解验收
+- [x] 验证全局阶段为 `BUILD` 时，构建明细升级为关键证据，缺失返回 `UNCERTAIN`
+
+实验结论：
+
+1. Tool 调用失败不直接决定 `SkillResult`。
+2. Workflow 根据证据的重要性、完整性和冲突决定结果状态。
+3. 继续执行属于执行策略，是否能输出确定结论属于证据判断。
+4. `query_directbus_status` 在当前 Pipeline Status Summary Skill 中属于关键证据。
+5. Build / Test 明细的证据等级可能随当前阶段变化；已验证 `BUILD` 阶段的 Build 明细属于关键证据，其他阶段和询问范围仍待验证。
 
 ## Design Hypotheses
 
@@ -61,6 +80,7 @@
 - [ ] `DH-009`：模板式 ResponseGenerator 是否足以跑通首个学习闭环
 - [ ] `DH-010`：对比 Retry Skill 的高阶 Tool 封装模式与“Skill 预检查 + 用户确认 + Tool 最终强校验”模式；最终安全规则必须保留在 Tool / 后端
 - [ ] `DH-011`：验证不同 Skill 是否应具有专属证据模型、业务不变量、冲突规则和降级策略；完成两个 Skill 后再评估公共 Evidence Rule 接口
+- [ ] `DH-012`：Pipeline Status Summary 中 Build / Test 明细的证据等级是否应随全局阶段、用户询问范围和当前业务节点动态变化
 
 ## Skill 2：Build Failure Analysis Skill
 
@@ -69,6 +89,17 @@
 - [x] `query_build_failure_analysis` 语义确认
 - [x] 证据不足输出“不确定”
 - [x] MVP Out of Scope 确认
+
+### MVP-1.2 最小实现（等待 Review）
+
+- [ ] 增加 `BUILD_FAILURE_DIAGNOSE` Intent 路由
+- [ ] 实现 Build Failure Analysis Skill 与确定性 Workflow
+- [ ] 实现已有分析结果的 Mock Tool 与固定 Fixture
+- [ ] 验证当前 / 历史失败隔离
+- [ ] 验证关键证据缺失、分析缺失和证据冲突
+- [ ] 保持只读诊断边界，不实现重构建、豁免或合入操作
+
+实现计划见：`../../docs/superpowers/plans/2026-07-20-build-failure-analysis-mvp-1.2.md`。
 
 ## Skill 3：Merge Block Diagnose Skill
 
@@ -98,21 +129,14 @@
 
 ## 下一步唯一优先事项
 
-Rory 结合代码重新走一遍以下链路：
-
-```text
-ToolResult
-→ Workflow 业务处理
-→ EvidenceBundle
-→ SkillResult
-→ ResponseGenerator
-```
+继续对现有 Pipeline Status Summary MVP 进行单知识点学习验收；MVP-1.2 Build Failure Analysis Skill 完整实现保持暂停。
 
 ### 暂时不要
 
-- 不开始 Build Failure Analysis Skill
+- 不引入公共规则接口
+- 不引入规则引擎
 - 不接 LLM
-- 不接 Spring AI
 - 不接 MCP
-- 不新增复杂抽象
-- 不继续扩大代码范围
+- 不接 RAG
+- 不实现 Retry Skill
+- 未完成 ChatGPT 学习验收前不开始 MVP-1.2 代码实现
