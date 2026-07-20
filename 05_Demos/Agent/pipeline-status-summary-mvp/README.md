@@ -29,15 +29,17 @@ flowchart TD
 
     Q --> R{"全局状态与明细冲突？"}
     R -- "是" --> S["SkillResult.UNCERTAIN"]
-    R -- "否" --> T{"存在 Tool 失败？"}
-    T -- "是" --> U["SkillResult.PARTIAL"]
-    T -- "否" --> V["SkillResult.SUCCESS"]
+    R -- "否" --> T{"关键证据缺失？<br/>query_directbus_status"}
+    T -- "是" --> S
+    T -- "否" --> U{"补充证据缺失？<br/>build / test detail"}
+    U -- "是" --> V["SkillResult.PARTIAL"]
+    U -- "否" --> Y["SkillResult.SUCCESS"]
 
     D --> W["TemplateResponseGenerator"]
     G --> W
     S --> W
-    U --> W
     V --> W
+    Y --> W
     W --> X["AgentResponse<br/>结构化结果 + 自然语言回答"]
 ```
 
@@ -45,6 +47,7 @@ flowchart TD
 
 - `UNKNOWN` 和缺少 `apply_bus_id` 都在进入 `SkillRegistry` 前返回，不会调用任何 Tool。
 - Workflow 串行调用三个 Mock Tool，并以 `history = false` 作为当前记录过滤规则。
+- Tool 失败后仍继续执行没有依赖关系的后续 Tool；全局状态是关键证据，构建和测试明细是补充证据。
 - 最终回答只能消费 `SkillResult` 中的 `EvidenceBundle`，不能绕过证据补充事实。
 
 ## 运行测试

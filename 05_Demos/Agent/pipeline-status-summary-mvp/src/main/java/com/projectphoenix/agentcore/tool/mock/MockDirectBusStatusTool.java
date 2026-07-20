@@ -13,6 +13,9 @@ import com.projectphoenix.agentcore.tool.payload.DirectBusStatusData;
 public final class MockDirectBusStatusTool implements DirectBusStatusTool {
     @Override
     public ToolResult<DirectBusStatusData> query(String id) {
+        if (FixtureData.CRITICAL_MISSING.equals(id)) {
+            return ToolResult.failure("query_directbus_status", "fixture: directbus status unavailable");
+        }
         if (FixtureData.CONFLICT.equals(id)) {
             return ToolResult.success("query_directbus_status", new DirectBusStatusData(id, false, 4, "COMPLETED"));
         }

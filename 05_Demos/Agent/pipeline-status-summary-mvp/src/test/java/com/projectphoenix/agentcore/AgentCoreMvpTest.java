@@ -17,7 +17,7 @@ import com.projectphoenix.agentcore.workflow.PipelineStatusSummaryWorkflow;
 import java.util.Map;
 
 /**
- * 覆盖 Pipeline Status Summary MVP-1.1 五个最小验收场景。
+ * 覆盖 Pipeline Status Summary MVP-1.1 六个最小验收场景。
  *
  * <p>测试使用 JDK 断言机制，不依赖第三方测试框架。</p>
  *
@@ -43,9 +43,10 @@ public final class AgentCoreMvpTest {
         testNormalStatusQuery();
         testUnknownIntentStopsBeforeRegistry();
         testMissingApplyBusId();
+        testCriticalToolFailure();
         testPartialToolFailure();
         testGlobalDetailConflict();
-        System.out.println("PASS: " + passed + "/5 tests");
+        System.out.println("PASS: " + passed + "/6 tests");
     }
 
     /**
@@ -79,12 +80,31 @@ public final class AgentCoreMvpTest {
     }
 
     /**
+     * 验证关键全局状态证据失败时返回不确定，同时保留后续 Tool 的可用证据。
+     */
+    private void testCriticalToolFailure() {
+        AgentCore.AgentResponse response = core().handle(request("查询状态 apply_bus_id=BUS-CRITICAL-MISSING"));
+        check(response.result().status() == SkillResult.Status.UNCERTAIN, "critical evidence status");
+        check(hasMissingEvidence(response, "query_directbus_status"), "critical evidence missing");
+        check(hasToolExecution(response, "query_build_detail", "SUCCESS"), "build tool continues");
+        check(hasToolExecution(response, "query_test_detail", "SUCCESS"), "test tool continues");
+        check(hasEvidence(response, "buildStatus"), "build evidence retained");
+        check(hasEvidence(response, "testStatus"), "test evidence retained");
+        passed++;
+    }
+
+    /**
      * 验证非关键 Tool 失败时只返回部分结果。
      */
     private void testPartialToolFailure() {
         AgentCore.AgentResponse response = core().handle(request("查询状态 apply_bus_id=BUS-PARTIAL"));
         check(response.result().status() == SkillResult.Status.PARTIAL, "partial status");
-        check(response.answer().contains("query_test_detail"), "partial missing evidence");
+        check(hasMissingEvidence(response, "query_test_detail"), "supplementary evidence missing");
+        check(hasToolExecution(response, "query_directbus_status", "SUCCESS"), "status tool executed");
+        check(hasToolExecution(response, "query_build_detail", "SUCCESS"), "build tool executed");
+        check(hasToolExecution(response, "query_test_detail", "FAILURE"), "test failure recorded");
+        check(hasEvidence(response, "stageStatus"), "global evidence retained");
+        check(hasEvidence(response, "buildStatus"), "build evidence retained");
         passed++;
     }
 
@@ -111,6 +131,21 @@ public final class AgentCoreMvpTest {
 
     private UserRequest request(String text) {
         return new UserRequest("req", text, Map.of());
+    }
+
+    private boolean hasMissingEvidence(AgentCore.AgentResponse response, String toolName) {
+        return response.result().evidence().missingEvidence().stream()
+                .anyMatch(item -> item.startsWith(toolName + ":"));
+    }
+
+    private boolean hasToolExecution(AgentCore.AgentResponse response, String toolName, String status) {
+        return response.result().evidence().toolExecutions().stream()
+                .anyMatch(item -> toolName.equals(item.toolName()) && status.equals(item.status()));
+    }
+
+    private boolean hasEvidence(AgentCore.AgentResponse response, String factName) {
+        return response.result().evidence().evidenceItems().stream()
+                .anyMatch(item -> factName.equals(item.factName()));
     }
 
     private static void check(boolean condition, String message) {

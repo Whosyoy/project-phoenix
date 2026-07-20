@@ -88,7 +88,9 @@ public final class PipelineStatusSummaryWorkflow {
             conflicts.add("全局流程已结束，但当前明细仍存在 RUNNING 状态");
         }
 
-        boolean uncertain = !conflicts.isEmpty();
+        boolean criticalEvidenceMissing = isEvidenceMissing(status);
+        boolean supplementaryEvidenceMissing = isEvidenceMissing(builds) || isEvidenceMissing(tests);
+        boolean uncertain = !conflicts.isEmpty() || criticalEvidenceMissing;
         EvidenceBundle bundle = new EvidenceBundle(
                 context.request().requestId(),
                 context.intent(),
@@ -99,8 +101,16 @@ public final class PipelineStatusSummaryWorkflow {
                 missing,
                 conflicts,
                 uncertain);
-        SkillResult.Status resultStatus = uncertain ? SkillResult.Status.UNCERTAIN
-                : missing.isEmpty() ? SkillResult.Status.SUCCESS : SkillResult.Status.PARTIAL;
+        SkillResult.Status resultStatus;
+        if (!conflicts.isEmpty()) {
+            resultStatus = SkillResult.Status.UNCERTAIN;
+        } else if (criticalEvidenceMissing) {
+            resultStatus = SkillResult.Status.UNCERTAIN;
+        } else if (supplementaryEvidenceMissing) {
+            resultStatus = SkillResult.Status.PARTIAL;
+        } else {
+            resultStatus = SkillResult.Status.SUCCESS;
+        }
         return new SkillResult(resultStatus, bundle, List.of());
     }
 
@@ -123,7 +133,13 @@ public final class PipelineStatusSummaryWorkflow {
                 result.errorMessage()));
         if (result.status() != ToolResult.Status.SUCCESS) {
             missing.add(result.toolName() + ": " + result.errorMessage());
+        } else if (result.data() == null) {
+            missing.add(result.toolName() + ": no data");
         }
+    }
+
+    private static boolean isEvidenceMissing(ToolResult<?> result) {
+        return result.status() != ToolResult.Status.SUCCESS || result.data() == null;
     }
 
     private static List<BuildDetailData> currentBuilds(ToolResult<List<BuildDetailData>> result) {
